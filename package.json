@@ -1,14 +1,24 @@
 {
-  "name": "gnosis-safe-delegate-dapp",
+  "name": "gnosis-safe-delegation-dapp",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ethersproject/providers": "^5.4.3",
+    "@gnosis.pm/safe-apps-web3-react": "^0.6.1",
+    "@gnosis.pm/safe-react-components": "^0.7.0",
+    "@material-ui/core": "4.11.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "@web3-react/abstract-connector": "6.0.7",
+    "@web3-react/core": "^6.1.9",
+    "@web3-react/injected-connector": "^6.0.7",
+    "@web3-react/ledger-connector": "^6.1.9",
+    "@web3-react/walletconnect-connector": "^6.2.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
+    "styled-components": "^5.2.0",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
