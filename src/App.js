@@ -1,17 +1,40 @@
-import React, { Component } from "react";
-import { Title, Text, Card, Button, Dot, EthHashInfo, Table, TextField, Divider } from "@gnosis.pm/safe-react-components";
-import { InjectedConnector } from "@web3-react/injected-connector";
-import { LedgerConnector } from "@web3-react/ledger-connector";
-import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
-import { useWeb3React} from '@web3-react/core';
+import React, {Component} from "react";
+import {Button, Card, Divider, Dot, EthHashInfo, Table, Text, TextField, Title} from "@gnosis.pm/safe-react-components";
+import {InjectedConnector} from "@web3-react/injected-connector";
+import {useWeb3React} from '@web3-react/core';
 import "./App.css"
 
-const RPCURL = "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
-const TX_SERVICE_BASE_URL = 'https://safe-transaction.rinkeby.gnosis.io'
+const NETWORK = {
+    "mainnet": {
+        CHAINID: 1,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.mainnet.gnosis.io",
+    },
+    "rinkeby": {
+        CHAINID: 4,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.rinkeby.gnosis.io",
+    },
+    "goerli": {
+        CHAINID: 5,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.goerli.gnosis.io",
+    },
+    "xdai": {
+        CHAINID: 100,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.xdai.gnosis.io",
+    },
+    "matic": {
+        CHAINID: 137,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.polygon.gnosis.io",
+    },
+    "binance": {
+        CHAINID: 56,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.bsc.gnosis.io"
+    }
+}
 
-const injectedConnector = new InjectedConnector({ supportedChainIds: [4] }) // Only support Rinkeby
-const ledgerConnector = new LedgerConnector({ chainId: 4, url: RPCURL, pollingInterval: 12000 })
-const walletConnector = new WalletConnectConnector({ rpc: { 4: RPCURL } })
+const CHAINID = NETWORK[process.env.REACT_APP_CHAIN].CHAINID;
+const TX_SERVICE_BASE_URL = NETWORK[process.env.REACT_APP_CHAIN].TX_SERVICE_BASE_URL;
+
+const injectedConnector = new InjectedConnector({ supportedChainIds: [CHAINID] });
 
 function withUseWeb3React(Component) {
     return function WrappedComponent(props) {
@@ -36,8 +59,6 @@ class App extends Component {
         };
 
         this.connectWalletMetamask = this.connectWalletMetamask.bind(this);
-        this.connectWalletLedger = this.connectWalletLedger.bind(this);
-        this.connectWalletConnect = this.connectWalletConnect.bind(this);
         this.connectWallet = this.connectWallet.bind(this);
 
         this.getSafeAddress = this.getSafeAddress.bind(this);
@@ -50,20 +71,12 @@ class App extends Component {
         this.getDelegatesView = this.getDelegatesView.bind(this);
     }
 
-    async connectWalletConnect() {
-        this.state.connector = walletConnector;
-        await this.connectWallet()
-    }
 
     async connectWalletMetamask() {
         this.state.connector = injectedConnector;
         await this.connectWallet()
     }
 
-    async connectWalletLedger() {
-        this.state.connector = ledgerConnector;
-        await this.connectWallet()
-    }
 
     async connectWallet() {
         const web3ReactValue = this.props.web3ReactHookValue;
@@ -87,16 +100,6 @@ class App extends Component {
                             Connect to Metamask
                         </Text>
                     </Button>
-                    <Button style={{marginLeft: "10px"}} onClick={this.connectWalletLedger} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
-                        <Text size="xl" color="secondary">
-                            Connect to Ledger
-                        </Text>
-                    </Button>
-                    <Button style={{marginLeft: "10px"}} onClick={this.connectWalletConnect} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
-                        <Text size="xl" color="secondary">
-                            Connect to WalletConnect
-                        </Text>
-                    </Button>
                 </>
             )
         }
@@ -110,6 +113,15 @@ class App extends Component {
             .then(data => this.setState({delegates: data}))
     }
 
+    adjustV(signature) {
+        const MIN_VALID_V_VALUE = 27
+        let sigV = parseInt(signature.slice(-2), 16);
+        if (sigV < MIN_VALID_V_VALUE) {
+            sigV += MIN_VALID_V_VALUE
+        }
+        return signature.slice(0, -2) + sigV.toString(16)
+    }
+
     async addDelegate() {
         const account = this.state.safe_account;
         const delegate = this.state.add_delegate;
@@ -119,6 +131,7 @@ class App extends Component {
         const message = delegate + totp;
         this.props.web3ReactHookValue.library.getSigner(this.props.web3ReactHookValue.account).signMessage(message)
             .then((signature) => {
+                signature = this.adjustV(signature);
                 const requestOptions = {
                     method: 'POST',
                     headers: { 'Content-type': 'application/json' },
@@ -146,6 +159,7 @@ class App extends Component {
         const message = delegate + totp;
         this.props.web3ReactHookValue.library.getSigner(this.props.web3ReactHookValue.account).signMessage(message)
             .then((signature) => {
+                signature = this.adjustV(signature);
                 const requestOptions = {
                     method: 'DELETE',
                     headers: { 'Content-type': 'application/json' },
@@ -336,7 +350,7 @@ class App extends Component {
                         </Text>
                     </Dot>
                     <Title size="xs">Introduction</Title>
-                    <Text size="xl">This DAPP demonstrates how to allow Gnosis-Safe delegation via Metamask or Ledger, without revealing the private key of users. Note that in this Demo, we only show you delegation with Metamask, Ledger or WalletConnect. However, it is very easy to add even more wallet connector (e.g. trezor, etc.) simply by switching the wallet connector for Web3React.</Text>
+                    <Text size="xl">This DAPP demonstrates how to allow Gnosis-Safe delegation via Metamask or Ledger, without revealing the private key of users. Note that in this Demo, we only show you delegation with Metamask. However, it is very easy to add even more wallet connector (e.g. trezor, etc.) simply by switching the wallet connector for Web3React.</Text>
                     <Text size="xl" color="error">Make sure all addresses you inputted in this webpage are checksum-ed!</Text>
                 </Card>
                 <Card className="card">
