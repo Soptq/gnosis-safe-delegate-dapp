@@ -5,3 +5,13 @@
 .card {
   margin-bottom: 30px;
 }
+
+.credit {
+  height: 50px;
+  margin-bottom: 20px;
+  font-family: 'Averta','Roboto','Helvetica Neue','Arial','Segoe UI','Oxygen','Ubuntu','Cantarell','Fira Sans','Droid Sans','-apple-system','BlinkMacSystemFont',sans-serif;
+  color: #001428;
+  font-weight: normal;
+  font-size: 16px;
+  text-align: right;
+}

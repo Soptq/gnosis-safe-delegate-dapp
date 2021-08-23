@@ -3,6 +3,7 @@ import {Button, Card, Divider, Dot, EthHashInfo, Table, Text, TextField, Title} 
 import {InjectedConnector} from "@web3-react/injected-connector";
 import {useWeb3React} from '@web3-react/core';
 import "./App.css"
+import badgerLOGO from './badger.png'
 
 const NETWORK = {
     "mainnet": {
@@ -343,6 +344,10 @@ class App extends Component {
         return (
             <div className="App">
                 <Title size="md">Gnosis-Safe Delegation DAPP</Title>
+                <div className="credit">
+                    <span>Made by <a href="https://github.com/Soptq">Soptq</a> for</span>
+                    <a href="https://badger.finance"><img style={{height: "30px", display: "inline-block", verticalAlign: "middle", paddingBottom: "5px"}} src={badgerLOGO}/></a>
+                </div>
                 <Card className="card">
                     <Dot color="primary">
                         <Text size="xl" color="white">
