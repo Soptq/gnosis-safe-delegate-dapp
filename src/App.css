@@ -15,3 +15,8 @@
   font-size: 16px;
   text-align: right;
 }
+
+.network-icon {
+  opacity: 1.0 !important;
+  margin-bottom: 10px !important;
+}

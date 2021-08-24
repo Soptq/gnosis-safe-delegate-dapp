@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ethersproject/address": "^5.4.0",
     "@ethersproject/bytes": "^5.4.0",
     "@ethersproject/providers": "^5.4.3",
     "@ethersproject/strings": "^5.4.0",

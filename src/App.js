@@ -2,40 +2,13 @@ import React, {Component} from "react";
 import {Button, Card, Divider, Dot, EthHashInfo, Table, Text, TextField, Title} from "@gnosis.pm/safe-react-components";
 import {InjectedConnector} from "@web3-react/injected-connector";
 import {useWeb3React} from '@web3-react/core';
+import badgerLOGO from './imgs/badger.png'
+import utils from "./utils"
 import "./App.css"
-import badgerLOGO from './badger.png'
 
-const NETWORK = {
-    "mainnet": {
-        CHAINID: 1,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.mainnet.gnosis.io",
-    },
-    "rinkeby": {
-        CHAINID: 4,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.rinkeby.gnosis.io",
-    },
-    "goerli": {
-        CHAINID: 5,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.goerli.gnosis.io",
-    },
-    "xdai": {
-        CHAINID: 100,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.xdai.gnosis.io",
-    },
-    "matic": {
-        CHAINID: 137,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.polygon.gnosis.io",
-    },
-    "binance": {
-        CHAINID: 56,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.bsc.gnosis.io"
-    }
-}
+const [supportedChainID, chainId2Entry] = utils.getSupportedChainID();
 
-const CHAINID = NETWORK[process.env.REACT_APP_CHAIN].CHAINID;
-const TX_SERVICE_BASE_URL = NETWORK[process.env.REACT_APP_CHAIN].TX_SERVICE_BASE_URL;
-
-const injectedConnector = new InjectedConnector({ supportedChainIds: [CHAINID] });
+const injectedConnector = new InjectedConnector({ supportedChainIds: supportedChainID });
 
 function withUseWeb3React(Component) {
     return function WrappedComponent(props) {
@@ -48,51 +21,145 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            connector: null,
             connected: false,
-            safe_account: "",
-            safe_accounts: [],
-            temp_safe_account: "",
+            safeAccount: "",
+            safeAccounts: [],
             delegates: null,
-            add_delegate: "",
-            add_label: "",
-            remove_delegate: "",
+            addDelegate: "",
+            addLabel: "",
+            removeDelegate: "",
+            txBaseUrl: "",
         };
 
         this.connectWalletMetamask = this.connectWalletMetamask.bind(this);
-        this.connectWallet = this.connectWallet.bind(this);
-
+        this.disconnectWalletMetamask = this.disconnectWalletMetamask.bind(this);
         this.getSafeAddress = this.getSafeAddress.bind(this);
-
         this.getConnectView = this.getConnectView.bind(this);
+        this.getSignature = this.getSignature.bind(this);
         this.fetchDelegates = this.fetchDelegates.bind(this);
         this.addDelegate = this.addDelegate.bind(this);
         this.removeDelegate = this.removeDelegate.bind(this);
-
         this.getDelegatesView = this.getDelegatesView.bind(this);
     }
 
 
     async connectWalletMetamask() {
-        this.state.connector = injectedConnector;
-        await this.connectWallet()
-    }
-
-
-    async connectWallet() {
-        const web3ReactValue = this.props.web3ReactHookValue;
-        web3ReactValue.activate(this.state.connector, undefined, true)
-            .then((r) => {
-                this.state.connector.getAccount().then((account) => {
-                    this.setState({connected: true});
+        this.props.web3ReactHookValue.activate(injectedConnector, undefined, true)
+            .then(r => {
+                injectedConnector.getAccount().then((account) => {
+                    this.setState({connected: true,
+                        txBaseUrl: utils.getTxServiceBaseURL(chainId2Entry[this.props.web3ReactHookValue.chainId])});
                 }).catch((e) => {console.log(e)});
             }).catch((e) => {console.log(e)});
+    }
+
+    disconnectWalletMetamask() {
+        this.props.web3ReactHookValue.deactivate()
+        injectedConnector.deactivate();
+        this.setState({
+            connected: false,
+            safeAccount: "",
+            safeAccounts: [],
+            delegates: null,
+            addDelegate: "",
+            addLabel: "",
+            removeDelegate: "",
+            txBaseUrl: "",
+        });
+    }
+
+    async getSignature(delegate) {
+        const totp = Math.floor(Date.now() / 1000 / 3600);
+        const msg = delegate + totp;
+        let sig = await this.props.web3ReactHookValue.library.getSigner(this.props.web3ReactHookValue.account).signMessage(msg)
+        return utils.adjustV(sig);
+    }
+
+    async fetchDelegates() {
+        const account = this.state.safeAccount;
+        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/`)
+            .then((response) => response.json())
+            .then(data => {
+                this.setState({delegates: data.results});
+            })
+    }
+
+    async addDelegate() {
+        const account = this.state.safeAccount;
+        const delegate = utils.getChecksumAddress(this.state.addDelegate);
+        const label = this.state.addLabel;
+
+        const signature = await this.getSignature(delegate);
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-type': 'application/json' },
+            body: JSON.stringify({
+                "safe": account,
+                "delegate": delegate,
+                "signature": signature,
+                "label": label
+            })
+        };
+        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/`, requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                this.setState({"addDelegate": "", "addLabel": ""})
+                this.fetchDelegates();
+            });
+    }
+
+    async removeDelegate() {
+        const account = this.state.safeAccount;
+        const delegate = utils.getChecksumAddress(this.state.removeDelegate);
+
+        const signature = await this.getSignature(delegate);
+        const requestOptions = {
+            method: 'DELETE',
+            headers: { 'Content-type': 'application/json' },
+            body: JSON.stringify({
+                "signature": signature
+            })
+        };
+        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/${delegate}/`, requestOptions)
+            .then(response => {
+                this.setState({"removeDelegate": ""})
+                this.fetchDelegates();
+            })
+    }
+
+    async getSafeAddress() {
+        if (!this.state.connected) {
+            alert("You need to firstly connect to your wallet.");
+            return
+        }
+        fetch(`${this.state.txBaseUrl}/api/v1/owners/${this.props.web3ReactHookValue.account}/safes/`)
+            .then(response => response.json())
+            .then(data => {
+                let checksumData = []
+                for (const safeAddr of data.safes) {
+                    checksumData.push(utils.getChecksumAddress(safeAddr))
+                }
+                this.setState({"safeAccounts": checksumData});
+            })
     }
 
     getConnectView() {
         let connectAction;
         if (this.state.connected) {
-            connectAction = <EthHashInfo hash={this.props.web3ReactHookValue.account} showIdenticon showCopyBtn name="Your Wallet Address"/>
+            connectAction = (
+                <>
+                    <Button className="network-icon" size="md" color="secondary" disabled>
+                        {utils.capitalizeFirstLetter(chainId2Entry[this.props.web3ReactHookValue.chainId])}
+                    </Button>
+                    <EthHashInfo hash={utils.getChecksumAddress(this.props.web3ReactHookValue.account)} showIdenticon showCopyBtn name="Your Wallet Address"/>
+                    <Divider/>
+                    <Button onClick={this.disconnectWalletMetamask} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
+                        <Text size="xl" color="secondary">
+                            Disconnect Wallet
+                        </Text>
+                    </Button>
+                </>
+            )
         } else {
             connectAction = (
                 <>
@@ -104,88 +171,17 @@ class App extends Component {
                 </>
             )
         }
-        return connectAction;
-    }
-
-    async fetchDelegates() {
-        const account = this.state.safe_account;
-        fetch(`${TX_SERVICE_BASE_URL}/api/v1/safes/${account}/delegates/`)
-            .then((response) => response.json())
-            .then(data => this.setState({delegates: data}))
-    }
-
-    adjustV(signature) {
-        const MIN_VALID_V_VALUE = 27
-        let sigV = parseInt(signature.slice(-2), 16);
-        if (sigV < MIN_VALID_V_VALUE) {
-            sigV += MIN_VALID_V_VALUE
-        }
-        return signature.slice(0, -2) + sigV.toString(16)
-    }
-
-    async addDelegate() {
-        const account = this.state.safe_account;
-        const delegate = this.state.add_delegate;
-        const label = this.state.add_label;
-
-        const totp = Math.floor(Date.now() / 1000 / 3600);
-        const message = delegate + totp;
-        this.props.web3ReactHookValue.library.getSigner(this.props.web3ReactHookValue.account).signMessage(message)
-            .then((signature) => {
-                signature = this.adjustV(signature);
-                const requestOptions = {
-                    method: 'POST',
-                    headers: { 'Content-type': 'application/json' },
-                    body: JSON.stringify({
-                        "safe": account,
-                        "delegate": delegate,
-                        "signature": signature,
-                        "label": label
-                    })
-                };
-                fetch(`${TX_SERVICE_BASE_URL}/api/v1/safes/${account}/delegates/`, requestOptions)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.setState({"add_delegate": "", "add_label": ""})
-                        this.fetchDelegates();
-                    });
-            }).catch((e) => {console.log(e);})
-    }
-
-    async removeDelegate() {
-        const account = this.state.safe_account;
-        const delegate = this.state.remove_delegate;
-
-        const totp = Math.floor(Date.now() / 1000 / 3600);
-        const message = delegate + totp;
-        this.props.web3ReactHookValue.library.getSigner(this.props.web3ReactHookValue.account).signMessage(message)
-            .then((signature) => {
-                signature = this.adjustV(signature);
-                const requestOptions = {
-                    method: 'DELETE',
-                    headers: { 'Content-type': 'application/json' },
-                    body: JSON.stringify({
-                        "signature": signature
-                    })
-                };
-                fetch(`${TX_SERVICE_BASE_URL}/api/v1/safes/${account}/delegates/${delegate}/`, requestOptions)
-                    .then(response => {
-                        this.setState({"remove_delegate": ""})
-                        this.fetchDelegates();
-                    })
-            }).catch((e) => {console.log(e);})
-    }
-
-    async getSafeAddress() {
-        if (!this.state.connector) {
-            alert("You need to firtsly connect to your wallet.");
-            return
-        }
-        fetch(`${TX_SERVICE_BASE_URL}/api/v1/owners/${this.props.web3ReactHookValue.account}/safes/`)
-            .then(response => response.json())
-            .then(data => {
-                this.setState({"safe_accounts": data.safes});
-            })
+        return (
+            <Card className="card">
+                <Dot color="primary">
+                    <Text size="xl" color="white">
+                        2
+                    </Text>
+                </Dot>
+                <Title size="xs">Connect to your wallet</Title>
+                {connectAction}
+            </Card>
+        )
     }
 
     getConfigureSafeAddressView() {
@@ -195,13 +191,13 @@ class App extends Component {
         ]
         const rows = [];
         let index = 0
-        for (const obj of this.state.safe_accounts) {
+        for (const obj of this.state.safeAccounts) {
             rows.push({
                 id: index++,
                 cells:[
                     {id: "address", content: <Text size="xl">{obj}</Text>},
                     {id: "action", content: (
-                            <Button onClick={(e) => {console.log(e.target); this.setState({safe_account: `${obj}`});}} size="md" iconType="received" color="secondary" variant="bordered" iconSize="sm">
+                            <Button onClick={(e) => {this.setState({safeAccount: `${obj}`});}} size="md" iconType="received" color="secondary" variant="bordered" iconSize="sm">
                                 <Text size="xl" color="secondary">
                                     Use This Address
                                 </Text>
@@ -220,7 +216,7 @@ class App extends Component {
                 <Title size="xs">Configure your Gnosis Safe address</Title>
                 <Text size="xl" style={{marginBottom: "20px"}}>Safes must be owned by your wallet account.</Text>
                 <Divider/>
-                <EthHashInfo hash={this.state.safe_account} showIdenticon showCopyBtn name="Your Safe Address"/>
+                <EthHashInfo hash={this.state.safeAccount} showIdenticon showCopyBtn name="Your Safe Address"/>
                 <br/>
                 <Table headers={headerCells} rows={rows} />
                 <Button onClick={this.getSafeAddress} style={{marginTop: "20px"}} size="md" iconType="received" color="secondary" variant="bordered" iconSize="sm">
@@ -241,12 +237,12 @@ class App extends Component {
         const rows = [];
         if (this.state.delegates != null) {
             let index = 0
-            for (const obj of this.state.delegates.results) {
+            for (const obj of this.state.delegates) {
                 rows.push({
                     id: index++,
                     cells:[
-                        {id: "delegate", content: <Text size="xl">{obj.delegate}</Text>},
-                        {id: "delegator", content: <Text size="xl">{obj.delegator}</Text>},
+                        {id: "delegate", content: <Text size="xl">{utils.getChecksumAddress(obj.delegate)}</Text>},
+                        {id: "delegator", content: <Text size="xl">{utils.getChecksumAddress(obj.delegator)}</Text>},
                         {id: "label", content: <Text size="xl">{obj.label}</Text>}
                     ]
                 })
@@ -283,16 +279,16 @@ class App extends Component {
                 <TextField
                     id="add-delegate-delegate"
                     label="Delegate"
-                    value={this.state.add_delegate}
-                    onChange={(e) => this.setState({add_delegate: e.target.value})}
+                    value={this.state.addDelegate}
+                    onChange={(e) => this.setState({addDelegate: e.target.value})}
                 />
                 <br/>
                 <TextField
                     style={{marginTop: "20px"}}
                     id="add-delegate-label"
                     label="Label"
-                    value={this.state.add_label}
-                    onChange={(e) => this.setState({add_label: e.target.value})}
+                    value={this.state.addLabel}
+                    onChange={(e) => this.setState({addLabel: e.target.value})}
                 />
                 <br/>
                 <Button onClick={this.addDelegate} style={{marginTop: "20px"}} size="md" iconType="sendAgain" color="secondary" variant="bordered" iconSize="sm">
@@ -316,8 +312,8 @@ class App extends Component {
                 <TextField
                     id="add-delegate-delegate"
                     label="Delegate"
-                    value={this.state.remove_delegate}
-                    onChange={(e) => this.setState({remove_delegate: e.target.value})}
+                    value={this.state.removeDelegate}
+                    onChange={(e) => this.setState({removeDelegate: e.target.value})}
                 />
                 <br/>
                 <Button onClick={this.removeDelegate} style={{marginTop: "20px"}} size="md" iconType="delete" color="secondary" variant="bordered" iconSize="sm">
@@ -335,7 +331,7 @@ class App extends Component {
         connectView = this.getConnectView();
         configureSafeAddressView = this.getConfigureSafeAddressView();
 
-        if (this.state.connected && this.state.safe_account.length > 0) {
+        if (this.state.connected && this.state.safeAccount.length > 0) {
             delegatesView = this.getDelegatesView();
             addDelegatesView = this.getAddDelegatesView();
             removeDelegatesView = this.getRemoveDelegatesView();
@@ -355,18 +351,12 @@ class App extends Component {
                         </Text>
                     </Dot>
                     <Title size="xs">Introduction</Title>
-                    <Text size="xl">This DAPP demonstrates how to allow Gnosis-Safe delegation via Metamask or Ledger, without revealing the private key of users. Note that in this Demo, we only show you delegation with Metamask. However, it is very easy to add even more wallet connector (e.g. trezor, etc.) simply by switching the wallet connector for Web3React.</Text>
-                    <Text size="xl" color="error">Make sure all addresses you inputted in this webpage are checksum-ed!</Text>
+                    <Text size="xl">This DAPP demonstrates how to allow Gnosis-Safe delegation via Metamask or Ledger, without revealing the private key of users. Note that in this tool, we only show you delegation with Metamask. However, it is very easy to add even more wallet connector (e.g. walletconnect, trezor, etc.) simply by switching the wallet connector for <a href="https://github.com/NoahZinsmeister/web3-react">Web3React</a>.</Text>
+                    <Divider/>
+                    <Text size="xl">Supports Mainnet, Rinkeby, Goerli, xDai, Matic, BSC.</Text>
+                    <Text size="xl">Feel free to review and deploy your own service at <a href="https://github.com/Soptq/gnosis-safe-delegate-dapp">https://github.com/Soptq/gnosis-safe-delegate-dapp</a>.</Text>
                 </Card>
-                <Card className="card">
-                    <Dot color="primary">
-                        <Text size="xl" color="white">
-                            2
-                        </Text>
-                    </Dot>
-                    <Title size="xs">Connect to your wallet</Title>
-                    {connectView}
-                </Card>
+                {connectView}
                 {configureSafeAddressView}
                 {delegatesView}
                 {addDelegatesView}
