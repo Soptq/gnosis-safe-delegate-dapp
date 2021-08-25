@@ -25,19 +25,6 @@ cd gnosis-safe-delegate-dapp
 docker-compose build && docker-compose up
 ```
 
-# Configure Network
-
-Before building (by yarn or docker), you can configure the network by editing `.env` file. Currently valid `REACT_APP_CHAIN` values are:
-
-```
-mainnet
-rinkeby (* default)
-goerli
-xdai
-matic
-binance
-```
-
 # Disclaimer
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
