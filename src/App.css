@@ -20,3 +20,10 @@
   opacity: 1.0 !important;
   margin-bottom: 10px !important;
 }
+
+.emphasize {
+  background: #E8673C;
+  color: white;
+  padding: 3px;
+  border-radius: 5px;
+}
