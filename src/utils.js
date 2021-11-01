@@ -23,7 +23,11 @@ const NETWORK = {
     },
     "binance": {
         CHAINID: 56,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.bsc.gnosis.io"
+        TX_SERVICE_BASE_URL: "https://safe-transaction.bsc.gnosis.io",
+    },
+    "arbitrum": {
+        CHAINID: 42161,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.arbitrum.gnosis.io",
     }
 }
 
