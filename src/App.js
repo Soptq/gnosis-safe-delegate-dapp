@@ -355,7 +355,11 @@ class App extends Component {
                     <Title size="xs">Introduction</Title>
                     <Text size="xl">This DAPP demonstrates how to allow Gnosis-Safe delegation via Metamask or Ledger, without revealing the private key of users. Note that in this tool, we only show you delegation with Metamask. However, it is very easy to add even more wallet connector (e.g. walletconnect, trezor, etc.) simply by switching the wallet connector for <a href="https://github.com/NoahZinsmeister/web3-react">Web3React</a>.</Text>
                     <Divider/>
-                    <Text size="xl">Currently supports: <span className="emphasize">Mainnet</span>, <span className="emphasize">Rinkeby</span>, <span className="emphasize">Goerli</span>, <span className="emphasize">xDai</span>, <span className="emphasize">Matic</span>, <span className="emphasize">BSC</span></Text>
+                    <Text size="xl" style={{display: "flex", "gap": "4px"}}>Currently supports: {
+                        supportedChainID.map((chainId) =>
+                            (<span key={chainId} className="emphasize">{utils.capitalizeFirstLetter(chainId2Entry[chainId])}</span>))
+                    }
+                    </Text>
                     <Text size="xl">Feel free to review and deploy your own service at <a href="https://github.com/Soptq/gnosis-safe-delegate-dapp">https://github.com/Soptq/gnosis-safe-delegate-dapp</a>.</Text>
                 </Card>
                 {connectView}
