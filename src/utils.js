@@ -65,4 +65,6 @@ function reloadPage(chainId) {
     window.location.reload();
 }
 
-export default {getSupportedChainID, getTxServiceBaseURL, adjustV, getChecksumAddress, capitalizeFirstLetter, reloadPage};
+const utils = {getSupportedChainID, getTxServiceBaseURL, adjustV, getChecksumAddress, capitalizeFirstLetter, reloadPage}
+
+export default utils;

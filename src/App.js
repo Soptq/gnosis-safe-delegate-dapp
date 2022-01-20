@@ -344,7 +344,7 @@ class App extends Component {
                 <Title size="md">Gnosis-Safe Delegation DAPP</Title>
                 <div className="credit">
                     <span>Made by <a href="https://github.com/Soptq">Soptq</a> for</span>
-                    <a href="https://badger.finance"><img style={{height: "30px", display: "inline-block", verticalAlign: "middle", paddingBottom: "5px"}} src={badgerLOGO}/></a>
+                    <a href="https://badger.finance"><img style={{height: "30px", display: "inline-block", verticalAlign: "middle", paddingBottom: "5px"}} src={badgerLOGO} alt="Badger Logo"/></a>
                 </div>
                 <Card className="card">
                     <Dot color="primary">
