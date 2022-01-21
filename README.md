@@ -15,6 +15,10 @@ Now you can connect to this dapp with your unstoppable domain!
 Live demo: https://youtu.be/ZEjvN_vl-L8
 Live URL: https://gnosis-delegator.vercel.app/
 
+Contact me:
+Discord handle: Soptq#9775
+UD Email: aplenty$dot$brier-0i$at$icloud$dot$com
+
 # Installation
 
 ## From source
