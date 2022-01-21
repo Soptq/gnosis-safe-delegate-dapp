@@ -7,6 +7,11 @@ A live demo at https://youtu.be/9Jxe_1COHHk
 Any bug, suggestion or possible improvement on this project would be appreciated! Contact me by creating an issue!
 
 Deployed to https://gnosis-delegator.badger.guru
+
+## New: Integrated Login with Unstoppable
+
+Now you can connect to this dapp with your unstoppable domain!
+
 # Installation
 
 ## From source

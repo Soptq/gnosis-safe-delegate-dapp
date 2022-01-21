@@ -1,14 +1,35 @@
 import React, {Component} from "react";
 import {Button, Card, Divider, Dot, EthHashInfo, Table, Text, TextField, Title} from "@gnosis.pm/safe-react-components";
 import {InjectedConnector} from "@web3-react/injected-connector";
+import {WalletConnectConnector} from "@web3-react/walletconnect-connector";
+import {UAuthConnector} from "@uauth/web3-react";
+import UAuth from '@uauth/js'
 import {useWeb3React} from '@web3-react/core';
 import badgerLOGO from './imgs/badger.png'
+import udLOGO from './imgs/ud.png'
 import utils from "./utils"
 import "./App.css"
 
 const [supportedChainID, chainId2Entry] = utils.getSupportedChainID();
 
 const injectedConnector = new InjectedConnector({ supportedChainIds: supportedChainID });
+
+const walletconnectConnector = new WalletConnectConnector({
+    infuraId: process.env.REACT_APP_INFURA_ID,
+    supportedChainIds: supportedChainID,
+    qrcode: true,
+})
+
+const uauthConnector = new UAuthConnector({
+    uauth: new UAuth({
+        clientID: process.env.REACT_APP_CLIENT_ID,
+        clientSecret: process.env.REACT_APP_CLIENT_SECRET,
+        redirectUri: process.env.REACT_APP_REDIRECT_URI,
+        postLogoutRedirectUri: process.env.REACT_APP_POST_LOGOUT_REDIRECT_URI,
+        scope: 'openid wallet',
+    }),
+    connectors: {injected: injectedConnector, walletconnect: walletconnectConnector}
+})
 
 function withUseWeb3React(Component) {
     return function WrappedComponent(props) {
@@ -29,10 +50,13 @@ class App extends Component {
             addLabel: "",
             removeDelegate: "",
             txBaseUrl: "",
+            displayDomain: false,
+            domain: "",
         };
 
         this.connectWalletMetamask = this.connectWalletMetamask.bind(this);
-        this.disconnectWalletMetamask = this.disconnectWalletMetamask.bind(this);
+        this.connectWalletUD = this.connectWalletUD.bind(this);
+        this.disconnectWallet = this.disconnectWallet.bind(this);
         this.getSafeAddress = this.getSafeAddress.bind(this);
         this.getConnectView = this.getConnectView.bind(this);
         this.getSignature = this.getSignature.bind(this);
@@ -41,7 +65,6 @@ class App extends Component {
         this.removeDelegate = this.removeDelegate.bind(this);
         this.getDelegatesView = this.getDelegatesView.bind(this);
     }
-
 
     async connectWalletMetamask() {
         this.props.web3ReactHookValue.activate(injectedConnector, undefined, true)
@@ -54,9 +77,25 @@ class App extends Component {
             }).catch((e) => {alert(e); console.error(e)});
     }
 
-    disconnectWalletMetamask() {
+    async connectWalletUD() {
+        this.props.web3ReactHookValue.activate(uauthConnector, undefined, true)
+            .then(async r => {
+                let user = await uauthConnector.uauth.user()
+                uauthConnector.getAccount().then((account) => {
+                    this.setState({connected: true,
+                        txBaseUrl: utils.getTxServiceBaseURL(chainId2Entry[this.props.web3ReactHookValue.chainId]),
+                        displayDomain: true,
+                        domain: user.sub,
+                    });
+                    window.ethereum.on('chainChanged', utils.reloadPage);
+                }).catch((e) => {alert(e); console.error(e)});
+            }).catch((e) => {alert(e); console.error(e)});
+    }
+
+    disconnectWallet() {
         this.props.web3ReactHookValue.deactivate()
         injectedConnector.deactivate();
+        uauthConnector.deactivate();
         this.setState({
             connected: false,
             safeAccount: "",
@@ -66,6 +105,8 @@ class App extends Component {
             addLabel: "",
             removeDelegate: "",
             txBaseUrl: "",
+            displayDomain: false,
+            domain: "",
         });
         window.ethereum.removeListener('chainChanged', utils.reloadPage);
     }
@@ -148,14 +189,22 @@ class App extends Component {
     getConnectView() {
         let connectAction;
         if (this.state.connected) {
+            let address;
+            let hash_address = utils.getChecksumAddress(this.props.web3ReactHookValue.account)
+            if (this.state.displayDomain) {
+                address = <EthHashInfo hash={hash_address} showIdenticon showCopyBtn name={"Your Unstoppable Domain: " + this.state.domain}/>
+            } else {
+                address = <EthHashInfo hash={hash_address} showIdenticon showCopyBtn name="Your Wallet Address"/>
+            }
+
             connectAction = (
                 <>
                     <Button className="network-icon" size="md" color="secondary" disabled>
                         {utils.capitalizeFirstLetter(chainId2Entry[this.props.web3ReactHookValue.chainId])}
                     </Button>
-                    <EthHashInfo hash={utils.getChecksumAddress(this.props.web3ReactHookValue.account)} showIdenticon showCopyBtn name="Your Wallet Address"/>
+                    {address}
                     <Divider/>
-                    <Button onClick={this.disconnectWalletMetamask} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
+                    <Button onClick={this.disconnectWallet} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
                         <Text size="xl" color="secondary">
                             Disconnect Wallet
                         </Text>
@@ -168,6 +217,14 @@ class App extends Component {
                     <Button onClick={this.connectWalletMetamask} size="md" iconType="unlocked" color="secondary" variant="bordered" iconSize="sm">
                         <Text size="xl" color="secondary">
                             Connect to Metamask
+                        </Text>
+                    </Button>
+
+                    <Button onClick={this.connectWalletUD} size="md" color="secondary"
+                            startIcon={<img style={{height: "30px", display: "inline-block", verticalAlign: "middle"}} src={udLOGO} alt="Badger Logo"/>}
+                            style={{marginLeft: "20px"}} className="btn-login-ud">
+                        <Text size="xl" color="white">
+                            Login with Unstoppable
                         </Text>
                     </Button>
                 </>

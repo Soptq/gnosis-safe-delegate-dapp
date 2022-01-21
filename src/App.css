@@ -27,3 +27,17 @@
   padding: 3px;
   border-radius: 5px;
 }
+
+.btn-login-ud {
+  background: rgb(75, 71, 238) !important;
+}
+
+.btn-login-ud:hover {
+  background: rgb(11, 36, 179) !important;
+  color: white;
+}
+
+.btn-login-ud:active {
+  background: rgb(83, 97, 199);
+  color: white;
+}
