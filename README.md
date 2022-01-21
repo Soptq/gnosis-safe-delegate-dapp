@@ -12,6 +12,9 @@ Deployed to https://gnosis-delegator.badger.guru
 
 Now you can connect to this dapp with your unstoppable domain!
 
+Live demo: https://youtu.be/ZEjvN_vl-L8
+Live URL: https://gnosis-delegator.vercel.app/
+
 # Installation
 
 ## From source
