@@ -28,6 +28,10 @@ const NETWORK = {
     "arbitrum": {
         CHAINID: 42161,
         TX_SERVICE_BASE_URL: "https://safe-transaction.arbitrum.gnosis.io",
+    },
+    "fantom": {
+        CHAINID: 250,
+        TX_SERVICE_BASE_URL: "https://safe.fantom.network",
     }
 }
 

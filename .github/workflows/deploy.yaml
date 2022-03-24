@@ -1,0 +1,46 @@
+name: Deploy App
+
+on:
+    push:
+        branches:
+            - master
+
+permissions:
+    id-token: write
+    contents: read
+
+env:
+    AWS_REGION: 'us-east-1'
+    BUCKET_NAME: 'gnosis-delegator-prod'
+    ASSUME_ROLE: 'arn:aws:iam::571629509943:role/Gnosis-Delegator-Deployer-Prod'
+    SESSION_NAME: 'gnosis-deploy-prod'
+    DISTRIBUTION_ID: 'E388BORDALO63C'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+            - name: Use node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: '16.x'
+            - name: Install dependencies
+              run: yarn
+            - name: Build app
+              run: CI=false yarn build
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@master
+              with:
+                  role-to-assume: ${{ env.ASSUME_ROLE }}
+                  role-session-name: ${{ env.SESSION_NAME }}
+                  aws-region: ${{ env.AWS_REGION }}
+            - name: Upload static site to s3
+              run: |
+                  aws s3 sync build/. s3://${{ env.BUCKET_NAME }} --delete
+            - name: Invalidate old files cached in Cloudfront
+              run: |
+                  aws cloudfront create-invalidation --distribution-id=${{ env.DISTRIBUTION_ID }} --paths /*
