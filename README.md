@@ -1,6 +1,6 @@
 # Gnosis Safe Delegate Dapp
 
-This project demonstrates how to develop a dapp To allow Gnosis-Safe deligation via Metamask, Ledger or even other providers.
+This project demonstrates how to develop a dapp To allow Gnosis-Safe delegation via Metamask, Ledger or even other providers.
 
 A live demo at https://youtu.be/9Jxe_1COHHk
 
