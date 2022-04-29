@@ -6,7 +6,7 @@ A live demo at https://youtu.be/9Jxe_1COHHk
 
 Any bug, suggestion or possible improvement on this project would be appreciated! Contact me by creating an issue!
 
-Deployed to https://gnosis-delegator.badger.guru
+Deployed to https://gnosis-delegator.badger.com
 # Installation
 
 ## From source
