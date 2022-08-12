@@ -32,7 +32,11 @@ const NETWORK = {
     "fantom": {
         CHAINID: 250,
         TX_SERVICE_BASE_URL: "https://safe.fantom.network",
-    }
+    },
+    "optimism": {
+        CHAINID: 10,
+        TX_SERVICE_BASE_URL: "https://safe-transaction.optimism.gnosis.io/",
+    },
 }
 
 function getSupportedChainID() {
