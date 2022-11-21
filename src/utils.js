@@ -3,7 +3,7 @@ const {getAddress} = require("@ethersproject/address");
 const NETWORK = {
     "mainnet": {
         CHAINID: 1,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.mainnet.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-mainnet.safe.global",
     },
     "rinkeby": {
         CHAINID: 4,
@@ -11,23 +11,23 @@ const NETWORK = {
     },
     "goerli": {
         CHAINID: 5,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.goerli.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-goerli.safe.global",
     },
     "xdai": {
         CHAINID: 100,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.xdai.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-gnosis-chain.safe.global",
     },
     "matic": {
         CHAINID: 137,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.polygon.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-polygon.safe.global",
     },
     "binance": {
         CHAINID: 56,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.bsc.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-bsc.safe.global",
     },
     "arbitrum": {
         CHAINID: 42161,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.arbitrum.gnosis.io",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-arbitrum.safe.global",
     },
     "fantom": {
         CHAINID: 250,
@@ -35,8 +35,20 @@ const NETWORK = {
     },
     "optimism": {
         CHAINID: 10,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.optimism.gnosis.io/",
+        TX_SERVICE_BASE_URL: "https://safe-transaction-optimism.safe.global",
     },
+    "avalanche": {
+        CHAINID: 43114,
+        TX_SERVICE_BASE_URL: "https://safe-transaction-avalanche.safe.global",
+    },
+    "evmos": {
+        CHAINID: 9001,
+        TX_SERVICE_BASE_URL: "https://transaction.safe.evmos.org",
+    },
+    "aurora": {
+        CHAINID: 1313161554,
+        TX_SERVICE_BASE_URL: "https://safe-transaction-aurora.safe.global",
+    }
 }
 
 function getSupportedChainID() {
