@@ -77,9 +77,16 @@ class App extends Component {
         return utils.adjustV(sig);
     }
 
+    formatBaseURL() {
+        if (this.props.web3ReactHookValue.chainId === 250) {
+            return `${this.state.txBaseUrl}/v1/chains/250`;
+        }
+        return `${this.state.txBaseUrl}/api/v1`;
+    }
+
     async fetchDelegates() {
         const account = this.state.safeAccount;
-        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/`)
+        fetch(`${this.formatBaseURL()}/delegates/?safe=${account}`)
             .then((response) => response.json())
             .then(data => {
                 this.setState({delegates: data.results});
@@ -98,11 +105,12 @@ class App extends Component {
             body: JSON.stringify({
                 "safe": account,
                 "delegate": delegate,
+                "delegator": this.props.web3ReactHookValue.account,
                 "signature": signature,
                 "label": label
             })
         };
-        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/`, requestOptions)
+        fetch(`${this.formatBaseURL()}/delegates/`, requestOptions)
             .then(response => response.json())
             .then(data => {
                 this.setState({"addDelegate": "", "addLabel": ""})
@@ -119,10 +127,12 @@ class App extends Component {
             method: 'DELETE',
             headers: { 'Content-type': 'application/json' },
             body: JSON.stringify({
+                "safe": account,
+                "delegate": delegate,
                 "signature": signature
             })
         };
-        fetch(`${this.state.txBaseUrl}/api/v1/safes/${account}/delegates/${delegate}/`, requestOptions)
+        fetch(`${this.formatBaseURL()}/safes/${account}/delegates/${delegate}/`, requestOptions)
             .then(response => {
                 this.setState({"removeDelegate": ""})
                 this.fetchDelegates();
@@ -134,7 +144,7 @@ class App extends Component {
             alert("You need to firstly connect to your wallet.");
             return
         }
-        fetch(`${this.state.txBaseUrl}/api/v1/owners/${this.props.web3ReactHookValue.account}/safes/`)
+        fetch(`${this.formatBaseURL()}/owners/${this.props.web3ReactHookValue.account}/safes/`)
             .then(response => response.json())
             .then(data => {
                 let checksumData = []
