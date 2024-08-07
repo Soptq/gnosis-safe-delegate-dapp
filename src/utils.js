@@ -48,6 +48,10 @@ const NETWORK = {
     "aurora": {
         CHAINID: 1313161554,
         TX_SERVICE_BASE_URL: "https://safe-transaction-aurora.safe.global",
+    },
+    "sepolia": {
+        CHAINID: 11155111,
+        TX_SERVICE_BASE_URL: "https://safe-transaction-sepolia.safe.global"
     }
 }
 
