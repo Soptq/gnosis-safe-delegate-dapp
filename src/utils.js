@@ -5,14 +5,6 @@ const NETWORK = {
         CHAINID: 1,
         TX_SERVICE_BASE_URL: "https://safe-transaction-mainnet.safe.global",
     },
-    "rinkeby": {
-        CHAINID: 4,
-        TX_SERVICE_BASE_URL: "https://safe-transaction.rinkeby.gnosis.io",
-    },
-    "goerli": {
-        CHAINID: 5,
-        TX_SERVICE_BASE_URL: "https://safe-transaction-goerli.safe.global",
-    },
     "xdai": {
         CHAINID: 100,
         TX_SERVICE_BASE_URL: "https://safe-transaction-gnosis-chain.safe.global",
@@ -49,9 +41,17 @@ const NETWORK = {
         CHAINID: 1313161554,
         TX_SERVICE_BASE_URL: "https://safe-transaction-aurora.safe.global",
     },
+    "zkevm": {
+        CHAINID: 1101,
+        TX_SERVICE_BASE_URL: "https://safe-transaction-zkevm.safe.global",
+    },
     "sepolia": {
         CHAINID: 11155111,
-        TX_SERVICE_BASE_URL: "https://safe-transaction-sepolia.safe.global"
+        TX_SERVICE_BASE_URL: "https://safe-transaction-sepolia.safe.global",
+    },
+    "baseSepolia": {
+        CHAINID: 84532,
+        TX_SERVICE_BASE_URL: 'https://safe-transaction-base-sepolia.safe.global',
     }
 }
 
